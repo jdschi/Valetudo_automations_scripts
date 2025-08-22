@@ -1,0 +1,122 @@
+alias: Update Valetudo Vacuum Room List
+description: ""
+triggers:
+  - entity_id: sensor.valetudo_p10purobot_map_segments
+    trigger: state
+  - trigger: homeassistant
+    event: start
+actions:
+  - alias: Notify if one or more room has been deleted from the map.
+    if:
+      - condition: not
+        conditions:
+          - alias: Check if room list will change
+            condition: template
+            value_template: >-
+              {%- set old =
+              state_attr('input_select.valetudo_room_list','options')
+              %} {%- set new = dict( 
+              states.sensor.valetudo_p10purobot_map_segments.attributes
+                  | items
+                  | selectattr(0, 'match', '([0-9]+)')
+                  | map('sort', reverse=True)
+                  | list
+                ).keys() | list %}
+              {{ set(new).intersection(set(old)) == set(old) }}
+    then:
+      - action: persistent_notification.create
+        metadata: {}
+        data:
+          title: Valetudo Robot Map has changed !
+          message: >-
+            One or more rooms have been deleted the map:
+
+            {%- set old =
+            state_attr('input_select.valetudo_room_list','options')
+            %} {%- set new = dict( 
+            states.sensor.valetudo_p10purobot_map_segments.attributes
+                | items
+                | selectattr(0, 'match', '([0-9]+)')
+                | map('sort', reverse=True)
+                | list
+              ).keys() | list %}
+            {{ difference(old,new) }}
+      - action: notify.telegram
+        metadata: {}
+        data:
+          message: >-
+            One or more rooms have been deleted from the map: 
+
+            {%- set old =
+            state_attr('input_select.valetudo_room_list','options')
+            %}  {%- set new =
+            dict(states.sensor.valetudo_p10purobot_map_segments.attributes |
+            items | selectattr(0, 'match', '([0-9]+)') | map('sort',
+            reverse=True) | list).keys() | list %} 
+
+            {{ difference(old,new) }}
+          title: Valetudo Map change
+  - alias: Notify if one or more rooms have been added to the map
+    if:
+      - condition: not
+        conditions:
+          - alias: Check if room list will change
+            condition: template
+            value_template: >-
+              {%- set old =
+              state_attr('input_select.valetudo_room_list','options')
+              %} 
+
+              {%- set new = dict( 
+              states.sensor.valetudo_p10purobot_map_segments.attributes
+                  | items
+                  | selectattr(0, 'match', '([0-9]+)')
+                  | map('sort', reverse=True)
+                  | list
+                ).keys() | list %}
+              {{ set(new).intersection(set(old)) == set(new) }}
+    then:
+      - action: persistent_notification.create
+        metadata: {}
+        data:
+          title: Valetudo Robot Map has changed !
+          message: >-
+            One or more rooms have been added to the map:
+
+            {%- set old =
+            state_attr('input_select.valetudo_room_list','options')
+            %}
+
+            {%- set new = dict( 
+            states.sensor.valetudo_p10purobot_map_segments.attributes
+                | items
+                | selectattr(0, 'match', '([0-9]+)')
+                | map('sort', reverse=True)
+                | list
+              ).keys() | list %}
+            {{ difference(new,old) }}
+      - action: notify.telegram
+        metadata: {}
+        data:
+          message: >-
+            One or more rooms have been added to the map: {%- set old =
+            state_attr('input_select.valetudo_room_list','options')
+            %} {%- set new = dict( 
+            states.sensor.valetudo_p10purobot_map_segments.attributes     |
+            items     | selectattr(0, 'match', '([0-9]+)')     | map('sort',
+            reverse=True)     | list   ).keys() | list %} {{ difference(new,old)
+            }}
+          title: Valetudo Robot Map has changed !
+  - target:
+      entity_id:
+        - input_select.valetudo_room_list
+    data:
+      options: |
+        {{ dict(  states.sensor.valetudo_p10purobot_map_segments.attributes
+            | items
+            | selectattr(0, 'match', '([0-9]+)')
+            | map('sort', reverse=True)
+            | list
+          ).keys() | list }}
+    action: input_select.set_options
+mode: single
