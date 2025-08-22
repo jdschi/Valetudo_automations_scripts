@@ -7,8 +7,8 @@ the case for your robot, so change accordingly.  Other changes are explained in 
    
  - `clean_route_rest_command.yaml`: example of adding a rest command to Home Assistant for the robot quirks. Comments explain how to obtain details from the Swagger UI.
 
- - `clean_selected_room_with_robot.yaml`: Script to clean any room on your Valetudo map within Home Assistant. Makes it easier to add multiple ways to clean a room (e.g., from
-   zigbee remote, timer, absence of occupants, etc. It is in queue mode, so you can call it multiple times, and it will then successively clean each room called.
+ - `clean_selected_room_with_robot.yaml`: Script to clean any room on your Valetudo map within Home Assistant. Makes it easier to add multiple ways to clean a room (_e.g._, from
+   zigbee remote, timer, absence of occupants, etc). It is in queue mode, so you can call it multiple times, and it will then successively clean each room called.
 
    It allows quirks for each room, like turning on lights while cleaning and then resetting them to prior state. This helps obstacle avoidance. Similar idea with music, blinds, etc.
    It requires `update_valetudo_vacuum_room_list.yaml`, and provisionally `clean_route_rest_command.yaml`. The latter could easily be removed from the script if undesired.
