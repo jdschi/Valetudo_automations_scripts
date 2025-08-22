@@ -1,4 +1,5 @@
-A few automations and a script that have been useful with Valetudo in Home Assistant
+A few automations and a script that have been useful with Valetudo in Home Assistant.  All yaml files assume your robot is named `valetudo_p10purobot` which is unlikely
+the case for your robot, so change accordingly.  Other changes are explained in the file comments.
 
  - `update_valetudo_vacuum_room_list.yaml`: First create a dropdown helper with the name `input_select.valetudo_room_list`. On creation it needs a single temporary entry.
    Edit this automation yaml for your robot (instead of `valetudo_p10purobot`), and this automation will make the dropdown list for each room on your map with
