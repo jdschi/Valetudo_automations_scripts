@@ -1,0 +1,10 @@
+# REST command to set clean route for robots that have this quirk. 
+# Of course, use your robot's URL. Get the id from the swagger UI QuirksCapability and execute "get quirks".
+# This will return all the quirks for your robot and the JSON code. This one is for "Clean Route", which 
+# is used in the script.  Needs to be somewhere in your `configuration.yaml`.
+rest_command:
+  p10pu_clean_route:
+    url: 'http://192.168.1.137/api/v2/robot/capabilities/QuirksCapability'
+    method: PUT
+    content_type: 'application/json'
+    payload: '{ "id":"924c82a8-1c3f-4363-9303-e6158e0ca41c","value":"{{ clean_route }}" }'
