@@ -1,0 +1,327 @@
+alias: "Clean Selected Room with robot "
+description: ""
+sequence:
+  - if:
+      - condition: template
+        value_template: "{{ room==\"unavailable\" or room==\"unknown\"  }}"
+    then:
+      - action: persistent_notification.create
+        metadata: {}
+        data:
+          message: >-
+            Cannot choose "unavailable" or "unknown" as room in selected
+            robot script.
+      - action: notify.telegram
+        metadata: {}
+        data:
+          message: >-
+            Cannot choose "unavailable" or "unknown" as room in selected
+            robot script.
+      - action: script.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id: script.clean_selected_room_with_robot
+    alias: Cancel if non-room was selected
+  - action: notify.telegram
+    metadata: {}
+    data:
+      message: |-
+        Room: {{room}}
+        mode: {{mode}}
+        iterations: {{iterations}}
+        clean route: {{clean_route}}
+      title: For debugging vacuum script
+    enabled: false
+    alias: Debug info to telegram
+  - alias: Check if robot is docked and dock is idle. Wait if necessary
+    if:
+      - condition: not
+        conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: vacuum.valetudo_p10purobot
+                state: docked
+              - condition: state
+                entity_id: sensor.valetudo_p10purobot_dock_status
+                state: idle
+    then:
+      - wait_for_trigger:
+          - trigger: state
+            entity_id:
+              - vacuum.valetudo_p10purobot
+            to: docked
+            for:
+              hours: 0
+              minutes: 1
+              seconds: 0
+          - trigger: state
+            entity_id:
+              - sensor.valetudo_p10purobot_dock_status
+            to: idle
+            for:
+              hours: 0
+              minutes: 1
+              seconds: 0
+    enabled: true
+  - alias: Set robot mode
+    target:
+      entity_id:
+        - select.valetudo_p10purobot_mode
+    data:
+      option: "{{mode}}"
+    action: select.select_option
+  - action: rest_command.p10pu_clean_route
+    metadata: {}
+    data:
+      clean_route: "{{ clean_route }}"
+    alias: Set route mode with RESTful command
+  - alias: Send robot to clean selected room
+    data:
+      topic: valetudo/p10purobot/MapSegmentationCapability/clean/set
+      payload: >-
+        {"segment_ids": ["{{
+        dict(states.sensor.valetudo_p10purobot_map_segments.attributes | items |
+        selectattr(0, 'match', '([0-9]+)') | map('sort', reverse=True) | list)[
+        room ] }}"], "iterations": {{ iterations }}}
+    action: mqtt.publish
+    enabled: true
+  - action: telegram_bot.send_message
+    metadata: {}
+    data:
+      message: >-
+        Sending robot to {{ mode }} {{state_attr(room, 'friendly_name')}}, and
+        turning on appropriate lights. http://{{
+        state_attr('sensor.valetudo_p10purobot_wi_fi_configuration','ips')[0] }}
+      disable_notification: true
+    enabled: false
+    alias: >-
+      Send telegram notification that cleaning has started (useful for
+      debugging)
+  - alias: Choose lights and water usage to control based on room
+    choose:
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ room == "Living Room" }}
+            alias: If room is livingroom
+        sequence:
+          - alias: Create scene.lights
+            action: scene.create
+            metadata: {}
+            data:
+              scene_id: lights
+              snapshot_entities:
+                - light.livingroom_lights
+          - action: light.turn_on
+            metadata: {}
+            data: {}
+            target:
+              entity_id: light.livingroom_lights
+          - action: select.select_option
+            metadata: {}
+            data:
+              option: min
+            target:
+              entity_id: select.valetudo_p10purobot_water
+      - conditions:
+          - condition: template
+            value_template: |
+              {{ room == "Hallway" }}
+        sequence:
+          - alias: Create scene.lights
+            action: scene.create
+            metadata: {}
+            data:
+              scene_id: lights
+              snapshot_entities:
+                - light.diningroom_overhead_lights
+          - action: light.turn_on
+            metadata: {}
+            data: {}
+            target:
+              entity_id:
+                - light.diningroom_overhead_lights
+          - action: select.select_option
+            metadata: {}
+            data:
+              option: min
+            target:
+              entity_id: select.valetudo_p10purobot_water
+        alias: If room is hallway
+      - conditions:
+          - condition: template
+            value_template: "{{ room == \"Dining Room\" }}"
+        sequence:
+          - alias: Create scene.lights
+            action: scene.create
+            metadata: {}
+            data:
+              scene_id: lightss
+              snapshot_entities:
+                - light.diningroom_overhead_lights
+          - action: light.turn_on
+            metadata: {}
+            data: {}
+            target:
+              entity_id:
+                - light.diningroom_overhead_lights
+          - action: select.select_option
+            metadata: {}
+            data:
+              option: min
+            target:
+              entity_id: select.valetudo_p10purobot_water
+        alias: If room is diningroom
+      - conditions:
+          - condition: template
+            value_template: "{{ room == \"Bathroom\" }}"
+        sequence:
+          - alias: Create scene.lights_downstairs
+            action: scene.create
+            metadata: {}
+            data:
+              scene_id: lights_downstairs
+              snapshot_entities: []
+          - action: select.select_option
+            metadata: {}
+            data:
+              option: high
+            target:
+              entity_id: select.valetudo_p10purobot_water
+        alias: If room is bathroom
+      - conditions:
+          - condition: template
+            value_template: "{{ room == \"Kitchen\" }}"
+        sequence:
+          - alias: Create scene.lights
+            action: scene.create
+            metadata: {}
+            data:
+              scene_id: lights
+              snapshot_entities:
+                - light.kitchen_overhead_light
+          - action: light.turn_on
+            metadata: {}
+            data:
+              brightness_pct: 99
+              kelvin: 6409
+            target:
+              entity_id:
+                - light.kitchen_lights
+          - if:
+              - condition: state
+                entity_id: cover.kitchen_curtain
+                state: closed
+            then:
+              - device_id: ae47978bea15ef97afc16dce6302ce0d
+                domain: cover
+                entity_id: 162f4a9c51caff2927ff2435fcbda27e
+                type: open
+            alias: Open Kitchen curtain if closed.
+          - action: select.select_option
+            metadata: {}
+            data:
+              option: high
+            target:
+              entity_id: select.valetudo_p10purobot_water
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 5
+              milliseconds: 0
+          - action: media_player.volume_set
+            metadata: {}
+            data:
+              volume_level: 0
+            target:
+              entity_id: media_player.squeezeboombox
+          - action: media_player.volume_mute
+            metadata: {}
+            data:
+              is_volume_muted: true
+            target:
+              entity_id: media_player.squeezeboombox
+        alias: If room is kitchen
+  - alias: Wait for robot returning to dock
+    wait_for_trigger:
+      - entity_id:
+          - vacuum.valetudo_p10purobot
+        to: returning
+        trigger: state
+    enabled: true
+    continue_on_timeout: false
+  - action: scene.turn_on
+    metadata: {}
+    enabled: true
+    data: {}
+    target:
+      entity_id:
+        - scene.lights
+  - data:
+      filename: /config/www/captures/photos/p10pumap.png
+    action: camera.snapshot
+    target:
+      entity_id: camera.p10purobot_map
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 2
+      milliseconds: 0
+  - data:
+      file: /config/www/captures/photos/p10pumap.png
+      caption: >-
+        Finished {{ mode }} of {{ room }}, and turning off appropriate lights.
+        Downstairs robot is now {{ states('vacuum.valetudo_p10purobot') }}.
+        http://{{
+        state_attr('sensor.valetudo_p10purobot_wi_fi_configuration','ips')[0] }}
+      disable_notification: true
+      inline_keyboard: >-
+        Vacuum another room?:/clean-room-robot, Mop another
+        room?:/mop-room-robot
+    action: telegram_bot.send_photo
+mode: queued
+max: 10
+fields:
+  mode:
+    selector:
+      select:
+        options:
+          - vacuum
+          - mop
+          - vacuum_and_mop
+          - vacuum_then_mop
+    name: mode
+    required: true
+    default: vacuum
+  iterations:
+    selector:
+      number:
+        min: 1
+        max: 2
+    name: iterations
+    default: 1
+    required: true
+  clean_route:
+    selector:
+      select:
+        options:
+          - Quick
+          - Standard
+          - Intensive
+          - Deep
+    name: clean_route
+    default: Standard
+    required: true
+    description: >-
+      Trade speed for thoroughness and vice-versa. "Intensive" and "Deep" only
+      apply when mopping.
+  room:
+    selector:
+      state:
+        entity_id: input_select.valetudo_room_list
+    description: Select room for cleaning (do not choose 'unavailable' or 'unknown').
+    default: Kitchen
+    name: Room
+    required: true
