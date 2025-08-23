@@ -20,7 +20,7 @@ the case for your robot, so change accordingly.  Other changes are explained in 
  - **Light-weight voice assistant.** If you have [Ollama](https://ollama.com/) running at home, and the [Ollama integration in Home Assistant](https://www.home-assistant.io/integrations/ollama/), there
    is a very low-resource way to use voice assistant. Set up a new agent in the Ollam integration using Llama 3.2:3b. Leave the boxes unchecked to control HA, so there are no entities exposed, it
    should not think before it responds, and keep the maximum memory messages to 0. All of these settings should make it pretty fast on a reasonable CPU. The zero memory seems to be essential to
-   keep from fooling the LLM into the wrong answer.  I named it "list select Llama3.2". Give it the prompt
+   keep the LLM from second guessing itself.  I named the agent "list select Llama3.2". Give it the prompt
    
    > You will be given a list, where the members are separated by commas. You should find the member of the list that is most similar to the given object.
    > Your response should be the member only with no other text or brackets. Do not give an explanation. Be sure that your answer is inside  quotation marks.
