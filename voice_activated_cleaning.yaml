@@ -1,0 +1,233 @@
+alias: Voice activated cleaning
+description: ""
+triggers:
+  - trigger: conversation
+    command:
+      - (vacuum | clean | start cleaning) [the] upstairs {room}
+      - send the (robot | vacuum) upstairs to [the] {room}
+      - (vacuum|clean) [the] {room} upstairs
+    id: upstairs-clean
+  - trigger: conversation
+    command:
+      - (vacuum | clean | start cleaning) [the] downstairs {room}
+      - send the (robot | vacuum) downstairs to [the] {room}
+      - (vacuum|clean) [the] {room} downstairs
+    id: downstairs-clean
+    enabled: true
+  - trigger: conversation
+    command:
+      - (mop | start mopping) [the] upstairs {room}
+      - send [the] upstairs (robot|vacuum) [robot]
+      - (mop|start mopping) [the] {room} upstairs
+    id: upstairs-mop
+    enabled: true
+  - trigger: conversation
+    command:
+      - (mop | start mopping) [the] downstairs {room}
+      - send [the] downstairs (robot|vacuum) [robot]
+      - (mop|start mopping) [the] {room} downstairs
+    id: downstairs-mop
+    enabled: true
+  - trigger: conversation
+    command:
+      - stop (cleaning|mopping) upstairs
+      - stop [the] upstairs robot
+    id: upstairs-stop
+    enabled: true
+  - trigger: conversation
+    command:
+      - stop (cleaning|mopping) downstairs
+      - stop [the] downstairs robot
+    id: downstairs-stop
+    enabled: true
+conditions: []
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id:
+              - upstairs-clean
+        sequence:
+          - action: conversation.process
+            metadata: {}
+            data:
+              text: >-
+                list={{state_attr('input_select.valetudo_upstairs_room_list','options')}}
+
+                object="{{ trigger.slots.room }}"
+              agent_id: conversation.list_select_llama3_2
+            response_variable: llm_response
+          - data:
+              variables:
+                mode: vacuum
+                iterations: 1
+                clean_route: Standard
+                room: "{{llm_response.response.speech.plain.speech.replace('\"','')}}"
+            target:
+              entity_id: script.clean_selected_upstairs_room_with_robot
+            enabled: true
+            action: script.turn_on
+            metadata: {}
+          - action: script.clean_selected_upstairs_room_with_robot
+            metadata: {}
+            data:
+              room: >-
+                "{{room_response.response.speech.plain.speech.replace('\"','')}}"
+              mode: vacuum
+              iterations: 1
+              clean_route: Standard
+            enabled: false
+          - action: telegram_bot.send_message
+            metadata: {}
+            data:
+              message: |-
+                sent: "{{trigger.slots.room}}"
+                returned: "{{llm_response.response.speech.plain.speech }}"
+            enabled: false
+      - conditions:
+          - condition: trigger
+            id:
+              - downstairs-clean
+        sequence:
+          - action: conversation.process
+            metadata: {}
+            data:
+              text: >-
+                list={{state_attr('input_select.valetudo_downstairs_room_list','options')}}
+
+                object="{{ trigger.slots.room }}"
+              agent_id: conversation.list_select_llama3_2
+            response_variable: llm_response
+          - action: persistent_notification.create
+            metadata: {}
+            data:
+              message: >-
+                output:
+                {{action_response.response.speech.plain.speech.replace('"','')}}
+            enabled: false
+          - action: script.clean_selected_downstairs_room_with_robot
+            metadata: {}
+            data:
+              mode: vacuum
+              iterations: 1
+              clean_route: Standard
+              room: "{{room_response.response.speech.plain.speech.replace('\"','')}}"
+            enabled: false
+          - action: script.turn_on
+            metadata: {}
+            data:
+              variables:
+                mode: vacuum
+                iterations: 1
+                clean_route: Standard
+                room: "{{llm_response.response.speech.plain.speech.replace('\"','')}}"
+            target:
+              entity_id: script.clean_selected_downstairs_room_with_robot
+            enabled: true
+      - conditions:
+          - condition: trigger
+            id:
+              - upstairs-mop
+        sequence:
+          - action: conversation.process
+            metadata: {}
+            data:
+              text: >-
+                list={{state_attr('input_select.valetudo_upstairs_room_list','options')}}
+
+                object="{{ trigger.slots.room }}"
+              agent_id: conversation.list_select_llama3_2
+            response_variable: llm_response
+          - action: script.turn_on
+            metadata: {}
+            data:
+              variables:
+                mode: vacuum_and_mop
+                iterations: 1
+                clean_route: Standard
+                room: "{{llm_response.response.speech.plain.speech.replace('\"','')}}"
+            target:
+              entity_id: script.clean_selected_upstairs_room_with_robot
+            enabled: true
+      - conditions:
+          - condition: trigger
+            id:
+              - downstairs-mop
+        sequence:
+          - action: conversation.process
+            metadata: {}
+            data:
+              text: >-
+                list={{state_attr('input_select.valetudo_downstairs_room_list','options')}}
+
+                object="{{ trigger.slots.room }}"
+              agent_id: conversation.list_select_llama3_2
+            response_variable: llm_response
+          - action: script.turn_on
+            metadata: {}
+            data:
+              variables:
+                mode: vacuum_and_mop
+                iterations: 1
+                clean_route: Standard
+                room: "{{llm_response.response.speech.plain.speech.replace('\"','')}}"
+            target:
+              entity_id:
+                - script.clean_selected_downstairs_room_with_robot
+            enabled: true
+      - conditions:
+          - condition: trigger
+            id:
+              - downstairs-stop
+        sequence:
+          - action: script.stop_downstairs_vacuum
+            metadata: {}
+            data: {}
+          - action: script.return_downstairs_vacuum_to_base
+            metadata: {}
+            data: {}
+          - action: script.turn_off
+            metadata: {}
+            data: {}
+            target:
+              entity_id: script.clean_selected_downstairs_room_with_robot
+      - conditions:
+          - condition: trigger
+            id:
+              - upstairs-stop
+        sequence:
+          - action: script.stop_upstairs_vacuum
+            metadata: {}
+            data: {}
+          - action: script.return_upstairs_vacuum_to_base
+            metadata: {}
+            data: {}
+          - action: script.turn_off
+            metadata: {}
+            data: {}
+            target:
+              entity_id: script.clean_selected_upstairs_room_with_robot
+    enabled: true
+  - choose:
+      - conditions:
+          - condition: trigger
+            id:
+              - upstairs-clean
+              - downstairs-clean
+              - upstairs-mop
+              - downstairs-mop
+        sequence:
+          - set_conversation_response: >-
+              Cleaning
+              {{llm_response.response.speech.plain.speech.replace('"','')}}
+            enabled: true
+      - conditions:
+          - condition: trigger
+            id:
+              - upstairs-stop
+              - downstairs-stop
+        sequence:
+          - set_conversation_response: Stopping robot and sending it back to base.
+            enabled: true
+mode: queued
+max: 10
