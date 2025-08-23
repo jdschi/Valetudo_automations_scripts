@@ -13,3 +13,5 @@ the case for your robot, so change accordingly.  Other changes are explained in 
    It allows quirks for each room, like turning on lights while cleaning and then resetting them to prior state. This helps obstacle avoidance. Similar idea with music, blinds, etc.
    It requires `update_valetudo_vacuum_room_list.yaml`, and provisionally `clean_route_rest_command.yaml`. The latter could easily be removed from the script if undesired.
    Or other quirks could be added.  The options list includes only a few rooms and lights as examples.
+
+ - The script also takes advantage of the useful docker container https://github.com/erkexzcx/valetudopng, which allows the telegram message to have a map image.
