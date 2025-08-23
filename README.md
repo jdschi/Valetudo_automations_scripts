@@ -25,8 +25,9 @@ the case for your robot, so change accordingly.  Other changes are explained in 
    > You will be given a list, where the members are separated by commas. You should find the member of the list that is most similar to the given object.
    > Your response should be the member only with no other text or brackets. Do not give an explanation. Be sure that your answer is inside  quotation marks.
 
-   Then the automation `voice_activated_cleaning.yaml` should work for calling the robot. You might want to find sentences that seem more natural to you, but now the name you use for the word is
-   extremely flexible. I have tried things that are pretty far away from "Master Bedroom" or "Hallway" and it knows what you want.
+   Then the automation `voice_activated_cleaning.yaml` should work for calling the robot using the above script.
+   You might want to find sentences that seem more natural to you, but now the name you use for the word is
+   extremely flexible. I have tried things that are pretty far away from "Master Bedroom" (_e.g._, "big bedroom") or "Hallway" (_e.g._, "corridor") and it knows what I want.
 
 I like the idea of using smaller LLMs (SLMs?) to do simpler tasks in HA. It seems to me that much of the use in real time is like this: just pick the best member of a list. A python script could probably
 do this well enough. I am sure that a smaller LLM could do this job even more efficiently than Llama 3.2 does, but I could not get others to return only what I needed. 
