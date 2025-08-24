@@ -1,4 +1,4 @@
-alias: Update Valetudo Vacuum Room List
+alias: Update Valetudo Downstairs Vacuum Room List
 description: ""
 triggers:
   - entity_id: sensor.valetudo_p10purobot_map_segments
@@ -27,7 +27,7 @@ actions:
       - action: persistent_notification.create
         metadata: {}
         data:
-          title: Valetudo Robot Map has changed !
+          title: Valetudo Downstairs Robot Map has changed !
           message: >-
             One or more rooms have been deleted the map:
 
@@ -55,7 +55,7 @@ actions:
             reverse=True) | list).keys() | list %} 
 
             {{ difference(old,new) }}
-          title: Valetudo Map change
+          title: Valetudo Downstairs Map change
   - alias: Notify if one or more rooms have been added to the map
     if:
       - condition: not
@@ -79,12 +79,12 @@ actions:
       - action: persistent_notification.create
         metadata: {}
         data:
-          title: Valetudo Robot Map has changed !
+          title: Valetudo Downstairs Robot Map has changed !
           message: >-
             One or more rooms have been added to the map:
 
             {%- set old =
-            state_attr('input_select.valetudo_room_list','options')
+            state_attr('input_select.valetudo_downstairs_room_list','options')
             %}
 
             {%- set new = dict( 
@@ -106,10 +106,10 @@ actions:
             items     | selectattr(0, 'match', '([0-9]+)')     | map('sort',
             reverse=True)     | list   ).keys() | list %} {{ difference(new,old)
             }}
-          title: Valetudo Robot Map has changed !
+          title: Valetudo Downstairs Robot Map has changed !
   - target:
       entity_id:
-        - input_select.valetudo_room_list
+        - input_select.valetudo_downstairs_room_list
     data:
       options: |
         {{ dict(  states.sensor.valetudo_p10purobot_map_segments.attributes
