@@ -1,28 +1,29 @@
-alias: "Clean Selected Room with robot "
+alias: "Clean Selected Downstairs Room with robot "
 description: ""
 sequence:
-  - if:
+  - alias: Cancel if non-room was selected
+    if:
       - condition: template
-        value_template: "{{ room==\"unavailable\" or room==\"unknown\"  }}"
+        value_template: |
+          {{ room=="unavailable" or room=="unknown"   }}
     then:
       - action: persistent_notification.create
         metadata: {}
         data:
           message: >-
             Cannot choose "unavailable" or "unknown" as room in selected
-            robot script.
+            downstairs robot script.
       - action: notify.telegram
         metadata: {}
         data:
           message: >-
             Cannot choose "unavailable" or "unknown" as room in selected
-            robot script.
+            downstairs robot script.
       - action: script.turn_off
         metadata: {}
         data: {}
         target:
-          entity_id: script.clean_selected_room_with_robot
-    alias: Cancel if non-room was selected
+          entity_id: script.clean_selected_downstairs_room_with_robot
   - action: notify.telegram
     metadata: {}
     data:
@@ -31,7 +32,7 @@ sequence:
         mode: {{mode}}
         iterations: {{iterations}}
         clean route: {{clean_route}}
-      title: For debugging vacuum script
+      title: For debugging Downstairs vacuum script
     enabled: false
     alias: Debug info to telegram
   - alias: Check if robot is docked and dock is idle. Wait if necessary
@@ -104,21 +105,21 @@ sequence:
       - conditions:
           - condition: template
             value_template: |
-              {{ room == "Living Room" }}
-            alias: If room is livingroom
+              {{ room == "Downstairs Living Room" }}
+            alias: If room is downstairs livingroom
         sequence:
-          - alias: Create scene.lights
+          - alias: Create scene.lights_downstairs
             action: scene.create
             metadata: {}
             data:
-              scene_id: lights
+              scene_id: lights_downstairs
               snapshot_entities:
-                - light.livingroom_lights
+                - light.downstairs_livingroom_lights
           - action: light.turn_on
             metadata: {}
             data: {}
             target:
-              entity_id: light.livingroom_lights
+              entity_id: light.downstairs_livingroom_lights
           - action: select.select_option
             metadata: {}
             data:
@@ -128,80 +129,81 @@ sequence:
       - conditions:
           - condition: template
             value_template: |
-              {{ room == "Hallway" }}
-        sequence:
-          - alias: Create scene.lights
-            action: scene.create
-            metadata: {}
-            data:
-              scene_id: lights
-              snapshot_entities:
-                - light.diningroom_overhead_lights
-          - action: light.turn_on
-            metadata: {}
-            data: {}
-            target:
-              entity_id:
-                - light.diningroom_overhead_lights
-          - action: select.select_option
-            metadata: {}
-            data:
-              option: min
-            target:
-              entity_id: select.valetudo_p10purobot_water
-        alias: If room is hallway
-      - conditions:
-          - condition: template
-            value_template: "{{ room == \"Dining Room\" }}"
-        sequence:
-          - alias: Create scene.lights
-            action: scene.create
-            metadata: {}
-            data:
-              scene_id: lightss
-              snapshot_entities:
-                - light.diningroom_overhead_lights
-          - action: light.turn_on
-            metadata: {}
-            data: {}
-            target:
-              entity_id:
-                - light.diningroom_overhead_lights
-          - action: select.select_option
-            metadata: {}
-            data:
-              option: min
-            target:
-              entity_id: select.valetudo_p10purobot_water
-        alias: If room is diningroom
-      - conditions:
-          - condition: template
-            value_template: "{{ room == \"Bathroom\" }}"
+              {{ room == "Downstairs Hallway" }}
         sequence:
           - alias: Create scene.lights_downstairs
             action: scene.create
             metadata: {}
             data:
               scene_id: lights_downstairs
-              snapshot_entities: []
+              snapshot_entities:
+                - light.downstairs_diningroom_overhead_lights
+                - light.downstairs_livingroom_lamp_west
+                - light.downstairs_livingroom_lamp_north
+                - light.sonoff_mini_1
+                - switch.shelly_1_5
+          - action: light.turn_on
+            metadata: {}
+            data: {}
+            target:
+              entity_id:
+                - light.downstairs_diningroom_overhead_lights
+                - light.downstairs_livingroom_lamp_west
+                - light.downstairs_livingroom_lamp_north
+                - light.sonoff_mini_1
+                - light.downstairs_diningroom_lamp_south
           - action: select.select_option
             metadata: {}
             data:
-              option: high
+              option: min
             target:
               entity_id: select.valetudo_p10purobot_water
-        alias: If room is bathroom
+        alias: If room is downstairs hallway
       - conditions:
           - condition: template
-            value_template: "{{ room == \"Kitchen\" }}"
+            value_template: "{{ room == \"Downstairs Dining Room\" }}"
         sequence:
-          - alias: Create scene.lights
+          - alias: Create scene.lights_downstairs
             action: scene.create
             metadata: {}
             data:
-              scene_id: lights
+              scene_id: lights_downstairs
               snapshot_entities:
+                - light.downstairs_diningroom_overhead_lights
+                - light.downstairs_diningroom_lamp_east
+                - light.downstairs_diningroom_lamp_south
+                - light.diningroom_dresser_plug
+          - action: light.turn_on
+            metadata: {}
+            data: {}
+            target:
+              entity_id:
+                - light.downstairs_diningroom_overhead_lights
+                - light.downstairs_diningroom_lamp_east
+                - light.downstairs_diningroom_lamp_south
+                - light.diningroom_dresser_plug
+          - action: select.select_option
+            metadata: {}
+            data:
+              option: min
+            target:
+              entity_id: select.valetudo_p10purobot_water
+        alias: If room is downstairs diningroom
+      - conditions:
+          - condition: template
+            value_template: "{{ room == \"Downstairs Kitchen\" }}"
+        sequence:
+          - alias: Create scene.lights_downstairs
+            action: scene.create
+            metadata: {}
+            data:
+              scene_id: lights_downstairs
+              snapshot_entities:
+                - light.kitchen_desk_lamp_bulb
+                - light.kitchen_puck_leds
                 - light.kitchen_overhead_light
+                - light.kitchen_overhead_light_2
+                - cover.kitchen_curtain
           - action: light.turn_on
             metadata: {}
             data:
@@ -243,7 +245,33 @@ sequence:
               is_volume_muted: true
             target:
               entity_id: media_player.squeezeboombox
-        alias: If room is kitchen
+        alias: If room is downstairs kitchen
+    default:
+      - action: telegram_bot.send_message
+        metadata: {}
+        data:
+          title: Downstairs Vacuum Called
+          message: >-
+            But called without an existing room. You called "{{ room }}", but
+            the list of available rooms is
+            {{state_attr('input_select.valetudo_downstairs_room_list','options')}}
+      - action: script.simple_notifications_to_all_present_phones
+        metadata: {}
+        data:
+          message: >-
+            But called without an existing room. You called "{{ room }}", but
+            the list of available rooms is
+            {{state_attr('input_select.valetudo_downstairs_room_list','options')}}
+          color: "#ffd966"
+          priority: low
+          critical: false
+          speak: false
+          title: Downstairs Robot Called
+      - action: script.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id: script.clean_selected_downstairs_room_with_robot
   - alias: Wait for robot returning to dock
     wait_for_trigger:
       - entity_id:
@@ -258,7 +286,7 @@ sequence:
     data: {}
     target:
       entity_id:
-        - scene.lights
+        - scene.lights_downstairs
   - data:
       filename: /config/www/captures/photos/p10pumap.png
     action: camera.snapshot
@@ -278,8 +306,8 @@ sequence:
         state_attr('sensor.valetudo_p10purobot_wi_fi_configuration','ips')[0] }}
       disable_notification: true
       inline_keyboard: >-
-        Vacuum another room?:/clean-room-robot, Mop another
-        room?:/mop-room-robot
+        Vacuum another room?:/clean-room-downstairs-robot, Mop another
+        room?:/mop-room-downstairs-robot
     action: telegram_bot.send_photo
 mode: queued
 max: 10
@@ -320,8 +348,8 @@ fields:
   room:
     selector:
       state:
-        entity_id: input_select.valetudo_room_list
+        entity_id: input_select.valetudo_downstairs_room_list
     description: Select room for cleaning (do not choose 'unavailable' or 'unknown').
-    default: Kitchen
+    default: Downstairs Kitchen
     name: Room
     required: true
