@@ -14,7 +14,7 @@ actions:
             condition: template
             value_template: >-
               {%- set old =
-              state_attr('input_select.valetudo_room_list','options')
+              state_attr('input_select.valetudo_downstairs_room_list','options')
               %} {%- set new = dict( 
               states.sensor.valetudo_p10purobot_map_segments.attributes
                   | items
@@ -32,7 +32,7 @@ actions:
             One or more rooms have been deleted the map:
 
             {%- set old =
-            state_attr('input_select.valetudo_room_list','options')
+            state_attr('input_select.valetudo_downstairs_room_list','options')
             %} {%- set new = dict( 
             states.sensor.valetudo_p10purobot_map_segments.attributes
                 | items
@@ -48,7 +48,7 @@ actions:
             One or more rooms have been deleted from the map: 
 
             {%- set old =
-            state_attr('input_select.valetudo_room_list','options')
+            state_attr('input_select.valetudo_downstairs_room_list','options')
             %}  {%- set new =
             dict(states.sensor.valetudo_p10purobot_map_segments.attributes |
             items | selectattr(0, 'match', '([0-9]+)') | map('sort',
@@ -64,7 +64,7 @@ actions:
             condition: template
             value_template: >-
               {%- set old =
-              state_attr('input_select.valetudo_room_list','options')
+              state_attr('input_select.valetudo_downstairs_room_list','options')
               %} 
 
               {%- set new = dict( 
@@ -100,7 +100,7 @@ actions:
         data:
           message: >-
             One or more rooms have been added to the map: {%- set old =
-            state_attr('input_select.valetudo_room_list','options')
+            state_attr('input_select.valetudo_downstairs_room_list','options')
             %} {%- set new = dict( 
             states.sensor.valetudo_p10purobot_map_segments.attributes     |
             items     | selectattr(0, 'match', '([0-9]+)')     | map('sort',
