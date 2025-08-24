@@ -124,6 +124,13 @@ actions:
             target:
               entity_id: script.clean_selected_downstairs_room_with_robot
             enabled: true
+          - action: telegram_bot.send_message
+            metadata: {}
+            data:
+              message: |-
+                sent: "{{trigger.slots.room}}"
+                returned: "{{llm_response.response.speech.plain.speech }}"
+            enabled: true
       - conditions:
           - condition: trigger
             id:
