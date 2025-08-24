@@ -23,7 +23,7 @@ the case for your robot, so change accordingly.  Other changes are explained in 
    keep the LLM from second guessing itself.  I named the agent "list select Llama3.2". Give it the prompt
    
    > You will be given a list, where the members are separated by commas. You should find the member of the list that is most similar to the given object.
-   > Your response should be the member only with no other text or brackets. Do not give an explanation. Be sure that your answer is inside  quotation marks.
+   > Your response should be exactly the member only with no other text or brackets. it should be exactly what is in the list. Do not give an explanation. Be sure that your answer is inside  quotation marks.
 
    Then the automation `voice_activated_cleaning.yaml` should work for calling the robot using the above script.
    You might want to find sentences that seem more natural to you, but now the name you use for the word is
