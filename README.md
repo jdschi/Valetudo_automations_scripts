@@ -1,10 +1,10 @@
 A few automations and a script that have been useful with [Valetudo](https://valetudo.cloud) in [Home Assistant](https://www.home-assistant.io/).  All yaml files assume your robot is named `valetudo_p10purobot` which is unlikely
-the case for your robot, so change accordingly.  Other changes are explained in the file comments. 
+the case for your robot, so change accordingly.  Other changes are explained in the file comments. I did some light editing for privacy, so please let me know if you find an error.
 
 I guess that it grew so big from years of tweaking. Maybe someone
-else finds it a useful way to learn about automations. I enjoy being able to say a simple sentence to my $13 Atom Echo like _Hey Nabu, mop the downstairs kitchen_ and it 
-turns off the radio, turns on the lights, opens the curtains and sends the robot to mop up. When it is done, it turns the lights, curtains and radio back to the prior state,
-and the robot goes home to clean and dry the mop pads. All local.
+else finds it a useful way to learn about automations. I enjoy anyone in the family being able to say a simple sentence to my $13 Atom Echo like _Hey Nabu, mop the downstairs kitchen_ and it 
+turns off the radio, turns on the lights, opens the curtains and sends the robot to mop up. When it is done, it returns the lights, curtains and radio back to the prior state,
+and the robot goes home to clean and dry the mop pads. All **local**. I even get a message with the map showing the route taken by the robot.
 
  - `update_valetudo_vacuum_downstairs_room_list.yaml`: First create a dropdown helper with the name `input_select.valetudo_downstairs_room_list`. On creation it needs a single temporary entry.
    Edit this automation yaml for your robot (instead of `valetudo_p10purobot`), and this automation will make the dropdown list for each room on your map with
@@ -20,7 +20,7 @@ and the robot goes home to clean and dry the mop pads. All local.
    It requires the automation `update_valetudo_vacuum_downstairs_room_list.yaml`, and provisionally `clean_route_rest_command.yaml`. The latter could easily be removed from the script if undesired.
    Or other quirks could be added.  The options list includes only a few rooms and lights as examples.
 
- - The script also takes advantage of the useful [docker container](https://github.com/erkexzcx/valetudopng) which allows the telegram message to have a map image. Remove or disable
+ - The script also takes advantage of this useful [docker container](https://github.com/erkexzcx/valetudopng) which allows the telegram message to have a map image. Remove or disable
    this notification if you like, or are not using that container.
 
  - **Light-weight voice assistant.** If you have [Ollama](https://ollama.com/) running at home, and the [Ollama integration in Home Assistant](https://www.home-assistant.io/integrations/ollama/), there
@@ -37,7 +37,8 @@ and the robot goes home to clean and dry the mop pads. All local.
    There are failures, like it doesn't seem to know one sleeps in bedroom.
 
 I like the idea of using smaller LLMs (SLMs?) to do simpler tasks in HA. It seems to me that much of the use in real time is like this: just pick the best member of a list. A python script could probably
-do this well enough. I am sure that a smaller LLM could do this job even more efficiently than Llama 3.2 does, but I could not get others to return only what I needed. This automation actually uses 3 small
+do this well enough. I am sure that a smaller LLM could do this job even more efficiently than Llama 3.2 does, but I could not get others to return only what I needed. 
+(I tried smoLLM, smoLLM2, Qwen, tinyLLM, deepseek-r1:1.5b.) This automation actually uses 3 small
 LLMs: one for STT, one for TTS and then my simple list select.
 
 A true LLM would probably be more useful to look at your patterns of behaviour, suggest automations and then write them. In other words, tasks not done in real time.
