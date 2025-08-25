@@ -140,7 +140,6 @@ sequence:
                 - light.downstairs_diningroom_overhead_lights
                 - light.downstairs_livingroom_lamp_west
                 - light.downstairs_livingroom_lamp_north
-                - light.sonoff_mini_1
                 - switch.shelly_1_5
           - action: light.turn_on
             metadata: {}
@@ -150,7 +149,6 @@ sequence:
                 - light.downstairs_diningroom_overhead_lights
                 - light.downstairs_livingroom_lamp_west
                 - light.downstairs_livingroom_lamp_north
-                - light.sonoff_mini_1
                 - light.downstairs_diningroom_lamp_south
           - action: select.select_option
             metadata: {}
