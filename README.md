@@ -3,7 +3,7 @@
 I find it usefult to have a script for utilizing automation with Valetudo. The script uses fields, so that you get something that looks like this when you write the automation, and makes sure
 that any pecularities to a given room can be maintained.
 
-![Screenshot](https://github.com/jdschi/Valetudo_automation_scripts/blob/main/Screenshot_20250825_075917.png?raw=true)
+![Screenshot](https://github.com/jdschi/Valetudo_automations_scripts/blob/main/Screenshot_20250825_075917.png?raw=true)
 
 A few automations and a script that have been useful with [Valetudo](https://valetudo.cloud) in [Home Assistant](https://www.home-assistant.io/).  All yaml files assume your robot is named `valetudo_p10purobot` which is unlikely
 the case for your robot, so change accordingly.  Other changes are explained in the file comments. I did some light editing for privacy, so please let me know if you find an error. Maybe someone
