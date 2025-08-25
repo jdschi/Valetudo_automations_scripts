@@ -1,11 +1,11 @@
 # A script and a few automations for Valetudo
 
-I find it usefult to have a script for utilizing automation with Valetudo. The script uses fields, so that you get something that looks like this when you write the automation, and makes sure
-that any pecularities to a given room can be maintained.
+I find it useful to have a script for utilizing automation with Valetudo. The script uses fields, so that you get something that looks like this when you write an automation, and makes sure
+that any pecularities to a given room can be maintained (lights, blinds, water flow, etc.). It can be called several times and the robot will then clean each room in the order that it is called.
 
 ![Screenshot](https://github.com/jdschi/Valetudo_automations_scripts/blob/main/Screenshot_20250825_075917.png?raw=true)
 
-A few automations and a script that have been useful with [Valetudo](https://valetudo.cloud) in [Home Assistant](https://www.home-assistant.io/).  All yaml files assume your robot is named `valetudo_p10purobot` which is unlikely
+These are optimized for [Valetudo](https://valetudo.cloud) in [Home Assistant](https://www.home-assistant.io/).  All yaml files assume your robot is named `valetudo_p10purobot` which is unlikely
 the case for your robot, so change accordingly.  Other changes are explained in the file comments. I did some light editing for privacy, so please let me know if you find an error. Maybe someone
 else finds it a useful way to learn about automations. Be aware that it will take a little time to modify it for your setup. It is not a real plug-and-pray thing.
 
@@ -22,7 +22,7 @@ better, and it would be nice if it could be turned into something like a bluepri
    is not really essential.
 
  - `clean_selected_downstairs_room_with_robot.yaml`: Script to clean any room on your Valetudo map within Home Assistant. Makes it easier to add multiple ways to clean a room (_e.g._, from
-   zigbee remote, timer, absence of occupants, etc). It is in queue mode, so you can call it multiple times, and it will then successively clean each room called.
+   zigbee remote, timer, absence of occupants, etc). 
 
    It allows quirks for each room, like turning on lights while cleaning and then resetting them to prior state. This helps obstacle avoidance. Similar idea with music, blinds, etc.
    It requires the automation `update_valetudo_vacuum_downstairs_room_list.yaml`, and provisionally `clean_route_rest_command.yaml`. The latter could easily be removed from the script if undesired.
