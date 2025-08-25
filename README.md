@@ -1,13 +1,16 @@
-A few automations and a script that have been useful with [Valetudo](https://valetudo.cloud) in [Home Assistant](https://www.home-assistant.io/).  All yaml files assume your robot is named `valetudo_p10purobot` which is unlikely
-the case for your robot, so change accordingly.  Other changes are explained in the file comments. I did some light editing for privacy, so please let me know if you find an error.
+# A script, and a couple automations for Valetudo
 
-I guess that it grew so big from years of tweaking. Maybe someone
-else finds it a useful way to learn about automations. I enjoy anyone in the family being able to say a simple sentence to my $13 Atom Echo like _Hey Nabu, mop the downstairs kitchen_ and it 
+A few automations and a script that have been useful with [Valetudo](https://valetudo.cloud) in [Home Assistant](https://www.home-assistant.io/).  All yaml files assume your robot is named `valetudo_p10purobot` which is unlikely
+the case for your robot, so change accordingly.  Other changes are explained in the file comments. I did some light editing for privacy, so please let me know if you find an error. Maybe someone
+else finds it a useful way to learn about automations. Be aware that it will take a little time to modify it for your setup. It is not a real plug-and-pray thing.
+
+I guess that it grew so big from years of tweaking. I enjoy anyone in the family being able to say a simple sentence to my $13 Atom Echo like _Hey Nabu, mop the downstairs kitchen_ and it 
 turns off the radio, turns on the lights, opens the curtains and sends the robot to mop up. When it is done, it returns the lights, curtains and radio back to the prior state,
-and the robot goes home to clean and dry the mop pads. All **local**. I even get a message with the map showing the route taken by the robot.
+and the robot goes home to clean and dry the mop pads. All **local**. I even get a message with the map showing the route taken by the robot. I am sure that someone else could code it 
+better, and it would be nice if it could be turned into something like a blueprint or integration.
 
  - `update_valetudo_vacuum_downstairs_room_list.yaml`: First create a dropdown helper with the name `input_select.valetudo_downstairs_room_list`. On creation it needs a single temporary entry.
-   Edit this automation yaml for your robot (instead of `valetudo_p10purobot`), and this automation will make the dropdown list for each room on your map with
+   Edit this automation yaml for your robot (instead of `valetudo_p10purobot`), and this automation will make the dropdown list for each room name on your map with
    an attribute that is the segment number, and keep it up to date. Necessary for the script. 
    
  - `clean_route_rest_command.yaml`: example of adding a rest command to Home Assistant for the robot quirks. Comments explain how to obtain details from the Swagger UI. It is used in the script, but
