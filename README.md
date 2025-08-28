@@ -5,14 +5,25 @@ that any pecularities to a given room can be maintained (lights, blinds, water f
 
 ![Screenshot](https://github.com/jdschi/Valetudo_automations_scripts/blob/main/Screenshot_20250825_075917.png?raw=true)
 
-These are optimized for [Valetudo](https://valetudo.cloud) in [Home Assistant](https://www.home-assistant.io/).  All yaml files assume your robot is named `valetudo_p10purobot` which is unlikely
-the case for your robot, so change accordingly.  Other changes are explained in the file comments. I did some light editing for privacy, so please let me know if you find an error. Maybe someone
-else finds it a useful way to learn about automations. Be aware that it will take a little time to modify it for your setup. It is not a real plug-and-pray thing.
+There is a simpler implementation involving two blueprints.
 
-I guess that it grew so big from years of tweaking. I enjoy anyone in the family being able to say a simple sentence to my $13 Atom Echo like _Hey Nabu, mop the downstairs kitchen_ and it 
+To implement the blueprints:
+ 1. Open Valetudo and open the hamburger at top left  Maps -> Segment Management. Rename your segments to something more descriptive, like "Kitchen".
+ 2. Import the blueprints to your `config/blueprints/automation` and `config/blueprints/script` folders. Go to Developer Tools and reload Automations and then Scripts.
+ 3. Open the "Update Valetudo Room List" blueprint, and find the robot "_map_segments" sensor in the first box. In the second box scroll to the bottom of the menu and
+    create a helper called 'input_select.valetudo_room_list` or similar. It needs a single entry on creation---use "Rage Against the Machine".  Remember the name of
+    the dropdown you just created for the next step. Click on the three dots on the upper right and Run the script. You can check your new "input_select" entity to
+    make sure that it is populated with the room names from Step 1.
+ 4. Open the script blueprint and fill it out with your robot information, and add your new dropdown "input_select" at the bottom.
+
+
+These are optimized for [Valetudo](https://valetudo.cloud) in [Home Assistant](https://www.home-assistant.io/). 
+
+I guess that it grew so big from years of tweaking. I enjoy anyone in the family being able to say a simple sentence to my $13 Atom Echo like _OK Nabu, mop the downstairs kitchen_ and it 
 turns off the radio, turns on the lights, opens the curtains and sends the robot to mop up. When it is done, it returns the lights, curtains and radio back to the prior state,
 and the robot goes home to clean and dry the mop pads. All **local**. I even get a message with the map showing the route taken by the robot. I am sure that someone else could code it 
 better, and it would be nice if it could be turned into something like a blueprint or integration.
+
 
  - `update_valetudo_vacuum_downstairs_room_list.yaml`: First create a dropdown helper with the name `input_select.valetudo_downstairs_room_list`. On creation it needs a single temporary entry.
    Edit this automation yaml for your robot (instead of `valetudo_p10purobot`), and this automation will make the dropdown list for each room name on your map with
