@@ -8,13 +8,15 @@ that any pecularities to a given room can be maintained (lights, blinds, water f
 There is a simpler implementation involving two blueprints.
 
 To implement the blueprints:
- 1. Open Valetudo and open the hamburger at top left  Maps -> Segment Management. Rename your segments to something more descriptive, like "Kitchen".
+ 1. Open Valetudo and open the hamburger at top left  Maps -> Segment Management. Insure that your segments are descriptively named, like "Kitchen".
  2. Import the blueprints to your `config/blueprints/automation` and `config/blueprints/script` folders. Go to Developer Tools and reload Automations and then Scripts.
  3. Open the "Update Valetudo Room List" blueprint, and find the robot "_map_segments" sensor in the first box. In the second box scroll to the bottom of the menu and
     create a helper called 'input_select.valetudo_room_list` or similar. It needs a single entry on creation---use "Rage Against the Machine".  Remember the name of
     the dropdown you just created for the next step. Click on the three dots on the upper right and Run the script. You can check your new "input_select" entity to
     make sure that it is populated with the room names from Step 1.
- 4. Open the script blueprint and fill it out with your robot information, and add your new dropdown "input_select" at the bottom.
+ 4. Open the script blueprint and fill it out with your robot information, and add your new dropdown "input_select" at the bottom. When you are finished, save it and
+    run it. You should see a menu. Pick a room and click run. Your robot should head towards that room. If you want, choose a different room, and click run again. The
+    robot should wait until the first job is finished. 
 
 
 These are optimized for [Valetudo](https://valetudo.cloud) in [Home Assistant](https://www.home-assistant.io/). 
