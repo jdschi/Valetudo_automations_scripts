@@ -1,326 +1,264 @@
-alias: "Clean Selected Downstairs Room with robot "
-description: ""
+blueprint:
+  name: Valetudo Clean Selected Room Script
+  description: Provides a simple UI to clean a room. Will queue up to 12 rooms with multiple calls. 
+    Requires the script (or blueprint) `update-roomlist-blueprint.yaml` also be installed and running.
+  domain: script
+  input:
+    topic_prefix:
+      name: Topic Prefix
+      description: Found in Valetudo UI. Hamburger top left -> Connectivity -> MQTT Connectivity (e.g., valetudo)
+      default: valetudo
+
+    identifier:
+      name: Identifier
+      description: Found in Valetudo UI. Hamburger top left -> Connectivity -> MQTT Connectivity
+#      default: l10surobot
+
+    vacuum:
+      name: Vacuum robot
+      selector:
+        entity:
+          filter:
+            - domain: vacuum
+#      default: vacuum.valetudo_l10surobot
+
+    map_segments_sensor:
+      name: Robot map segments sensor
+      description: > 
+        Entity created by Valetudo, can be found in MQTT device (_e.g.,_ "sensor.<topic prefix>_<identifier>_map_segments")
+      selector:
+        entity:
+          filter:
+            - domain: sensor
+#      default: sensor.valetudo_l10surobot_map_segments
+
+    mode_select:
+      name: Robot cleaning mode
+      description: > 
+        Entity created by Valetudo, can be found in MQTT device 
+        (_e.g.,_ "sensor.<topic prefix>_<identifier>_mode")
+      selector:
+        entity:
+          filter:
+            - domain: select
+#      default: select.valetudo_l10surobot_mode
+
+    fan_select:
+      name: Robot fan speed
+      description: > 
+        Entity created by Valetudo, can be found in MQTT device 
+        (_e.g.,_ "sensor.<topic prefix>_<identifier>_fan")
+      selector:
+        entity:
+          filter:
+            - domain: select
+#      default: select.valetudo_l10surobot_fan
+
+    water_select:
+      name: Robot water flowrate
+      description: > 
+        Entity created by Valetudo, can be found in MQTT device 
+        (_e.g.,_ "sensor.<topic prefix>_<identifier>_water")
+      selector:
+        entity:
+          filter:
+            - domain: select
+#      default: select.valetudo_l10surobot_water
+
+    room_list_input_select:
+      name: Valetudo Room list
+      description: Dropdown helper you _already_ created for this purpose
+      selector:
+        entity:
+          filter:
+            - domain: input_select
+
 sequence:
-  - alias: Cancel if non-room was selected
+  - alias: Cancel if unknown or unavailable room was selected
     if:
       - condition: template
-        value_template: |
-          {{ room=="unavailable" or room=="unknown"   }}
+        value_template: >-
+          {{ room_name=="unavailable" or room_name=="unknown"   }}
+
+          {# Did you know that it is not possible to add comments to scripts and
+          automations? No, it's true. So, I might try to sneak a few inside the templates. #}
+
     then:
       - action: persistent_notification.create
         metadata: {}
         data:
           message: >-
-            Cannot choose "unavailable" or "unknown" as room in selected
-            downstairs robot script.
+            Cannot choose "unavailable" or "unknown" as room in selected robot
+            script.
       - action: notify.telegram
         metadata: {}
         data:
-          message: >-
-            Cannot choose "unavailable" or "unknown" as room in selected
-            downstairs robot script.
-      - action: script.turn_off
-        metadata: {}
-        data: {}
-        target:
-          entity_id: script.clean_selected_downstairs_room_with_robot
-  - action: notify.telegram
-    metadata: {}
-    data:
-      message: |-
-        Room: {{room}}
-        mode: {{mode}}
-        iterations: {{iterations}}
-        clean route: {{clean_route}}
-      title: For debugging Downstairs vacuum script
-    enabled: false
-    alias: Debug info to telegram
-  - alias: Check if robot is docked and dock is idle. Wait if necessary
+          message: >- 
+            Cannot choose "unavailable" or "unknown" as room in selected robot
+            script.
+      - stop: Stopped because "unavailable" or "unknown" was selected for room name
+        response_variable: outcome
+            
+  - variables:
+      _map_segments_sensor: !input map_segments_sensor
+      _room_list_input_select: !input room_list_input_select
+      _topic_prefix: !input topic_prefix
+      _identifier: !input identifier
+      _vacuum: !input vacuum
+      _dock_status: >-
+        {{ _vacuum.replace('vacuum','sensor')~'_dock_status' }}
+      _mode_select: !input mode_select
+      _fan_select: !input fan_select
+      _water_select: !input water_select
+      room_number: >-
+        {% set attrs = states[_map_segments_sensor].attributes %} 
+        {% set ns = namespace(found='0') %}  
+        {% for k in attrs if k is string and k.isdigit() %}
+          {% if attrs[k] == room_name %}
+            {% set ns.found = k %}
+          {% endif %}
+        {% endfor %} 
+        {{ ns.found }}
+    alias: Variables found under MQTT Connectivity in Valetudo UI to identify robot
+#  - alias: Debug info to telegram
+#    action: notify.telegram
+#    metadata: {}
+#    data:
+#      message: |-
+#        room name: {{room_name}}
+#        mode: {{mode}}
+#        fan: {{fan}}
+#        water: {{water}}
+#        iterations: {{iterations}}
+#        robot: {{_identifier}}
+#        topic prefix: {{_topic_prefix}}
+#        room number: {{room_number}}
+#        dock status: {{_dock_status}}
+#        robot wait: {{ robot_wait_to_start }}
+#        dock wait: {{ dock_wait_to_start }}
+#      title: For debugging vacuum blueprint or script
+#    enabled: true
+  - alias: Cancel if  room is not available in list
     if:
-      - condition: not
-        conditions:
-          - condition: and
-            conditions:
-              - condition: state
-                entity_id: vacuum.valetudo_p10purobot
-                state: docked
-              - condition: state
-                entity_id: sensor.valetudo_p10purobot_dock_status
-                state: idle
+      - condition: template
+        value_template: |
+          {{ room_number == 0 }}
+        enabled: true
     then:
-      - wait_for_trigger:
-          - trigger: state
-            entity_id:
-              - vacuum.valetudo_p10purobot
-            to: docked
-            for:
-              hours: 0
-              minutes: 1
-              seconds: 0
-          - trigger: state
-            entity_id:
-              - sensor.valetudo_p10purobot_dock_status
-            to: idle
-            for:
-              hours: 0
-              minutes: 1
-              seconds: 0
-    enabled: true
-  - alias: Set robot mode
-    target:
-      entity_id:
-        - select.valetudo_p10purobot_mode
-    data:
-      option: "{{mode}}"
-    action: select.select_option
-  - action: rest_command.p10pu_clean_route
-    metadata: {}
-    data:
-      clean_route: "{{ clean_route }}"
-    alias: Set route mode with RESTful command
-  - alias: Send robot to clean selected room
-    data:
-      topic: valetudo/p10purobot/MapSegmentationCapability/clean/set
-      payload: >-
-        {"segment_ids": ["{{
-        dict(states.sensor.valetudo_p10purobot_map_segments.attributes | items |
-        selectattr(0, 'match', '([0-9]+)') | map('sort', reverse=True) | list)[
-        room ] }}"], "iterations": {{ iterations }}}
-    action: mqtt.publish
-    enabled: true
-  - action: telegram_bot.send_message
-    metadata: {}
-    data:
-      message: >-
-        Sending robot to {{ mode }} {{state_attr(room, 'friendly_name')}}, and
-        turning on appropriate lights. http://{{
-        state_attr('sensor.valetudo_p10purobot_wi_fi_configuration','ips')[0] }}
-      disable_notification: true
-    enabled: false
-    alias: >-
-      Send telegram notification that cleaning has started (useful for
-      debugging)
-  - alias: Choose lights and water usage to control based on room
-    choose:
-      - conditions:
-          - condition: template
-            value_template: |
-              {{ room == "Downstairs Living Room" }}
-            alias: If room is downstairs livingroom
-        sequence:
-          - alias: Create scene.lights_downstairs
-            action: scene.create
-            metadata: {}
-            data:
-              scene_id: lights_downstairs
-              snapshot_entities:
-                - light.downstairs_livingroom_lights
-          - action: light.turn_on
-            metadata: {}
-            data: {}
-            target:
-              entity_id: light.downstairs_livingroom_lights
-          - action: select.select_option
-            metadata: {}
-            data:
-              option: min
-            target:
-              entity_id: select.valetudo_p10purobot_water
-      - conditions:
-          - condition: template
-            value_template: |
-              {{ room == "Downstairs Hallway" }}
-        sequence:
-          - alias: Create scene.lights_downstairs
-            action: scene.create
-            metadata: {}
-            data:
-              scene_id: lights_downstairs
-              snapshot_entities:
-                - light.downstairs_diningroom_overhead_lights
-                - light.downstairs_livingroom_lamp_west
-                - light.downstairs_livingroom_lamp_north
-                - switch.shelly_1_5
-          - action: light.turn_on
-            metadata: {}
-            data: {}
-            target:
-              entity_id:
-                - light.downstairs_diningroom_overhead_lights
-                - light.downstairs_livingroom_lamp_west
-                - light.downstairs_livingroom_lamp_north
-                - light.downstairs_diningroom_lamp_south
-          - action: select.select_option
-            metadata: {}
-            data:
-              option: min
-            target:
-              entity_id: select.valetudo_p10purobot_water
-        alias: If room is downstairs hallway
-      - conditions:
-          - condition: template
-            value_template: "{{ room == \"Downstairs Dining Room\" }}"
-        sequence:
-          - alias: Create scene.lights_downstairs
-            action: scene.create
-            metadata: {}
-            data:
-              scene_id: lights_downstairs
-              snapshot_entities:
-                - light.downstairs_diningroom_overhead_lights
-                - light.downstairs_diningroom_lamp_east
-                - light.downstairs_diningroom_lamp_south
-                - light.diningroom_dresser_plug
-          - action: light.turn_on
-            metadata: {}
-            data: {}
-            target:
-              entity_id:
-                - light.downstairs_diningroom_overhead_lights
-                - light.downstairs_diningroom_lamp_east
-                - light.downstairs_diningroom_lamp_south
-                - light.diningroom_dresser_plug
-          - action: select.select_option
-            metadata: {}
-            data:
-              option: min
-            target:
-              entity_id: select.valetudo_p10purobot_water
-        alias: If room is downstairs diningroom
-      - conditions:
-          - condition: template
-            value_template: "{{ room == \"Downstairs Kitchen\" }}"
-        sequence:
-          - alias: Create scene.lights_downstairs
-            action: scene.create
-            metadata: {}
-            data:
-              scene_id: lights_downstairs
-              snapshot_entities:
-                - light.kitchen_desk_lamp_bulb
-                - light.kitchen_puck_leds
-                - light.kitchen_overhead_light
-                - light.kitchen_overhead_light_2
-                - cover.kitchen_curtain
-          - action: light.turn_on
-            metadata: {}
-            data:
-              brightness_pct: 99
-              kelvin: 6409
-            target:
-              entity_id:
-                - light.kitchen_lights
-          - if:
-              - condition: state
-                entity_id: cover.kitchen_curtain
-                state: closed
-            then:
-              - device_id: ae47978bea15ef97afc16dce6302ce0d
-                domain: cover
-                entity_id: 162f4a9c51caff2927ff2435fcbda27e
-                type: open
-            alias: Open Kitchen curtain if closed.
-          - action: select.select_option
-            metadata: {}
-            data:
-              option: high
-            target:
-              entity_id: select.valetudo_p10purobot_water
-          - delay:
-              hours: 0
-              minutes: 0
-              seconds: 5
-              milliseconds: 0
-          - action: media_player.volume_set
-            metadata: {}
-            data:
-              volume_level: 0
-            target:
-              entity_id: media_player.squeezeboombox
-          - action: media_player.volume_mute
-            metadata: {}
-            data:
-              is_volume_muted: true
-            target:
-              entity_id: media_player.squeezeboombox
-        alias: If room is downstairs kitchen
-    default:
+      - action: persistent_notification.create
+        metadata: {}
+        data:
+          message: >-
+            Selected  room is not  in robot list. But called
+            without an existing room. You called "{{ room_name }}", but the list
+            of available rooms is
+            {{state_attr(_room_list_input_select,'options')}}
+          title: Robot Vacuum called
       - action: telegram_bot.send_message
         metadata: {}
         data:
-          title: Downstairs Vacuum Called
+          title: Vacuum Robot Called
           message: >-
-            But called without an existing room. You called "{{ room }}", but
-            the list of available rooms is
-            {{state_attr('input_select.valetudo_downstairs_room_list','options')}}
-      - action: script.simple_notifications_to_all_present_phones
-        metadata: {}
-        data:
-          message: >-
-            But called without an existing room. You called "{{ room }}", but
-            the list of available rooms is
-            {{state_attr('input_select.valetudo_downstairs_room_list','options')}}
-          color: "#ffd966"
-          priority: low
-          critical: false
-          speak: false
-          title: Downstairs Robot Called
-      - action: script.turn_off
+            But called without an existing room. You called "{{ room_name }}",
+            but the list of available rooms is
+            {{state_attr(_room_list_input_select,'options')}}
+          enabled: false
+      - stop: Stopped because room name was not in list.
+        response_variable: outcome
+    enabled: true
+  - alias: Check for desired robot and dock states. Wait if necessary
+    if:
+      - condition: not
+        conditions:
+        - condition: template
+          value_template: >-
+            {{ robot_wait_to_start == "any" or
+            ( is_state(_vacuum, robot_wait_to_start) and 
+            is_state(_dock_status, dock_wait_to_start) ) }}
+    then:
+      - wait_for_trigger:
+        - trigger: template
+          value_template: >-
+            {{ is_state(_vacuum, robot_wait_to_start) and is_state(_dock_status, dock_wait_to_start) }}
+    enabled: true
+  - alias: If robot wants to start immediately.
+    if:
+      - condition: template
+        value_template: >-
+          {{ robot_wait_to_start == "any" }}
+    then:
+      - action: vacuum.stop
         metadata: {}
         data: {}
         target:
-          entity_id: script.clean_selected_downstairs_room_with_robot
-  - alias: Wait for robot returning to dock
-    wait_for_trigger:
-      - entity_id:
-          - vacuum.valetudo_p10purobot
-        to: returning
-        trigger: state
+          entity_id: !input vacuum
     enabled: true
-    continue_on_timeout: false
-  - action: scene.turn_on
-    metadata: {}
+
+
+  - alias: Set robot mode
+    target:
+      entity_id: !input mode_select
+    data:
+      option: "{{mode}}"
+    action: select.select_option
     enabled: true
-    data: {}
+  - alias: Set fan speed
     target:
-      entity_id:
-        - scene.lights_downstairs
-  - data:
-      filename: /config/www/captures/photos/p10pumap.png
-    action: camera.snapshot
+      entity_id: !input fan_select
+    data:
+      option: "{{fan}}"
+    action: select.select_option
+    enabled: true
+  - alias: Set water flowrate
     target:
-      entity_id: camera.p10purobot_map
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 2
-      milliseconds: 0
-  - data:
-      file: /config/www/captures/photos/p10pumap.png
-      caption: >-
-        Finished {{ mode }} of {{ room }}, and turning off appropriate lights.
-        Downstairs robot is now {{ states('vacuum.valetudo_p10purobot') }}.
-        http://{{
-        state_attr('sensor.valetudo_p10purobot_wi_fi_configuration','ips')[0] }}
-      disable_notification: true
-      inline_keyboard: >-
-        Vacuum another room?:/clean-room-downstairs-robot, Mop another
-        room?:/mop-room-downstairs-robot
-    action: telegram_bot.send_photo
+      entity_id: !input water_select
+    data:
+      option: "{{water}}"
+    action: select.select_option
+    enabled: true
+  - alias: Send robot to clean selected room
+    data:
+      topic: "{{ _topic_prefix }}/{{ _identifier }}/MapSegmentationCapability/clean/set"
+      payload: "{\"segment_ids\": [\"{{ room_number }}\"], \"iterations\": {{ iterations }}}"
+    action: mqtt.publish
+    enabled: true
+#  - action: telegram_bot.send_message
+#    metadata: {}
+#    data:
+#      message: >-
+#        Sending robot to {{ mode }} {{ room }}, and turning on appropriate
+#        lights. http://{{
+#        state_attr('sensor.'~_topic_prefix~'_'~_identifier~'_wi_fi_configuration','ips')[0]
+#        }}
+#      disable_notification: true
+#    enabled: false
+#    alias: >-
+#      Send telegram notification that cleaning has started (useful for
+#      debugging)
 mode: queued
-max: 10
+max: 12
 fields:
   mode:
     selector:
-      select:
-        options:
-          - vacuum
-          - mop
-          - vacuum_and_mop
-          - vacuum_then_mop
+      state: 
+        entity_id: !input mode_select
     name: mode
     required: true
     default: vacuum
+  fan:
+    selector:
+      state: 
+        entity_id: !input fan_select
+    name: fan
+    required: true
+    default: medium
+  water:
+    selector:
+      state: 
+        entity_id: !input water_select
+    name: water
+    required: true
+    default: medium
   iterations:
     selector:
       number:
@@ -329,25 +267,32 @@ fields:
     name: iterations
     default: 1
     required: true
-  clean_route:
+  room_name:
+    selector:
+      state:
+        entity_id: !input room_list_input_select
+    description: Select room for cleaning (do not choose 'unavailable' or 'unknown').
+    name: Room name
+    required: true
+  robot_wait_to_start:
     selector:
       select:
         options:
-          - Quick
-          - Standard
-          - Intensive
-          - Deep
-    name: clean_route
-    default: Standard
+          - any
+          - returning
+          - docked
+    default: docked
+    name: Wait to start task only when the robot is in this state
+    description: Note that `any` means stop whatever it is doing and start this task.
     required: true
-    description: >-
-      Trade speed for thoroughness and vice-versa. "Intensive" and "Deep" only
-      apply when mopping.
-  room:
+
+  dock_wait_to_start:
     selector:
-      state:
-        entity_id: input_select.valetudo_downstairs_room_list
-    description: Select room for cleaning (do not choose 'unavailable' or 'unknown').
-    default: Downstairs Kitchen
-    name: Room
+      select:
+        options:
+          - idle
+          - drying
+    default: idle
     required: true
+    name: Wait to start task only when the dock is in this state
+    description: Relevant only if `docked` is selected above.
